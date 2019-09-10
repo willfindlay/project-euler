@@ -48,6 +48,22 @@ def derangements(n):
 
     return dp[n]
 
+def rn(n, m):
+    dp = [[0 for x in range(m + 1)] for y in range(n + 1)]
+
+    for i in range(n + 1):
+        for j in range(m + 1):
+            if j <= i:
+                if i == 0 and j == 0:
+                    dp[i][j] = 1
+                elif i == 1 and j == 0:
+                    dp[i][j] = 0
+                elif j == 0:
+                    dp[i][j] = (i - 1) * (dp[i - 1][0] + dp[i - 2][0])
+                else:
+                    dp[i][j] = choose(i, j) * dp[i - j][0]
+    return dp[n][m]
+
 def subfact(n):
     if n in [2, 0]:
         return 1
@@ -74,14 +90,11 @@ if __name__ == "__main__":
     then reduce a/b to get final a and b
     """
 
+    a = math.factorial(n - (P - k)) * rn(P, (P - k))
     b = math.factorial(n)
-    n = n - P + k
 
-    s = 0
-    for i in range(n-k+1):
-        s += choose(n-k, i) * derangements(n - i)
-
-    a = choose(P, k) * s
+    print(f"{a}/{b} = {a/b}")
+    print(f"a is {a - 1025280} over/under.")
 
     a, b = reduce(a, b)
 
