@@ -2,6 +2,8 @@
 
 import math
 import itertools
+import operator as op
+from functools import reduce
 
 M = 10**9 + 123
 
@@ -23,82 +25,76 @@ def sieve(n):
 
     b = []
 
-    for i,p in enumerate(a):
+    count = 0
+    for p in a:
         if p:
-            b.append(i)
+            count = count + 1
+        b.append(count)
 
     return b
 
-def reduce(a, b):
+def reduce_fraction(a, b):
     gcd = math.gcd(a,b)
     return a // gcd, b // gcd
 
-def choose(n, r):
-    return math.factorial(n) // (math.factorial(n - r) * math.factorial(r))
+#def choose(n, r):
+#    return math.factorial(n) // (math.factorial(n - r) * math.factorial(r))
 
-def derangements(n):
-    dp = [0 for x in range(n + 1)]
-
-    dp[0] = 1
-    dp[1] = 0
-    dp[2] = 1
-
-    for i in range(3, n + 1):
-        dp[i] = (i - 1) * (dp[i - 1] + dp[i - 2])
-
-    return dp[n]
-
-def rn(n, m):
-    dp = [[0 for x in range(m + 1)] for y in range(n + 1)]
+def cache_ncr(n, r):
+    dp = [[0 for x in range(r + 1)] for x in range(n + 1)]
 
     for i in range(n + 1):
-        for j in range(m + 1):
-            if j <= i:
-                if i == 0 and j == 0:
-                    dp[i][j] = 1
-                elif i == 1 and j == 0:
-                    dp[i][j] = 0
-                elif j == 0:
-                    dp[i][j] = (i - 1) * (dp[i - 1][0] + dp[i - 2][0])
-                else:
-                    dp[i][j] = choose(i, j) * dp[i - j][0]
-    return dp[n][m]
+        for j in range(min(i, r) + 1):
+            if j == 0 or j == i:
+                dp[i][j] = 1
+            else:
+                dp[i][j] = dp[i - 1][j - 1] + dp[i - 1][j]
 
-def subfact(n):
-    if n in [2, 0]:
-        return 1
-    elif n in [1]:
-        return 0
-    elif 1 <= n <= 18:
-        return round(math.factorial(n) / math.e)
-    elif n.imag == 0 and n.real == int(n.real) and n > 0:
-        return (n - 1) * (subfact(n - 1) + subfact(n - 2))
-    else:
-        raise ValueError
+    return dp
 
-if __name__ == "__main__":
-    #n, k = (int(n) for n in input().split())
-    n, k = 10, 3
+def choose(n, r):
+    r = min(n, r)
 
-    P = len(sieve(n))
+    try:
+        num = reduce(op.mul, range(n, n-r, -1))
+    except TypeError:
+        num = 1
+    try:
+        den = reduce(op.mul, range(1, r + 1))
+    except TypeError:
+        den = 1
 
-    # we need to find a and b
-    """
-    a -> number of ways to get condition
-    b -> n!
+    return num // den
 
-    then reduce a/b to get final a and b
-    """
+#def num_ways(n, k, p):
+#    dp = [[0 for x in range(k + 1)] for y in range(n + 1)]
+#    for i in range(2, n + 1):
+#        for j in range(1, k + 1):
+#            if i ==
+#            np = p[n]
+#    return choose(np, (np-k)) * sum([(-1 if i % 2 != 0 else 1) * choose(k, i) * math.factorial(n - (np-k) - i) for i in range(k + 1)])
 
-    a = math.factorial(n - (P - k)) * rn(P, (P - k))
+def solution(n, k):
+    p = sieve(n)
+    np = p[n]
+
+    a = choose(np, (np-k)) * sum([(-1 if i % 2 != 0 else 1) * choose(k, i) * math.factorial(n - (np-k) - i) for i in range(k + 1)])
+    #a = num_ways(n, k, p)
+    a, n = reduce_fraction(a, n)
     b = math.factorial(n)
 
+    a, b = reduce_fraction(a, b)
+
     print(f"{a}/{b} = {a/b}")
-    print(f"a is {a - 1025280} over/under.")
 
-    a, b = reduce(a, b)
-
+    # modular inverse of b, since M is prime
     b = pow(b, M - 2, M)
 
-    # print the solution
-    print(a * b % M)
+    # the solution
+    return a * b % M
+
+if __name__ == "__main__":
+    n, k = (int(n) for n in input().split())
+    #n, k = 10, 3
+
+    print(solution(n, k))
